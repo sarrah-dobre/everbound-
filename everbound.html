@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Everbound"><meta name="theme-color" content="#0b0907">
+<title>Everbound</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#0b0907;--card:#1b1815;--line:#2e2a25;--tx:#eee4d3;--mut:#a39a89;--ac:#5f9b83;--ac2:#d99872;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.5 Lora,Georgia,serif;min-height:100%;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+h1{font-size:30px;margin:18px 0 4px;font-weight:600}h2{font-size:20px;margin:22px 0 8px}
+.w{max-width:520px;margin:0 auto;padding:0 18px}.m{color:var(--mut);font-style:italic}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0}
+.btn{background:var(--ac);color:#06130e;border:0;border-radius:99px;padding:13px 22px;font:600 17px Lora,serif}
+.btn.g{background:transparent;color:var(--ac);border:1px solid var(--line)}.btn.r{background:transparent;color:#d9735a}
+.row{display:flex;gap:10px;align-items:center}.sp{justify-content:space-between}.c{text-align:center}
+.cv{aspect-ratio:2/3;border-radius:6px 10px 10px 6px;object-fit:cover;display:flex;align-items:flex-end;padding:6px;box-shadow:0 10px 26px #0009;font-size:11px;line-height:1.2;font-weight:600;overflow:hidden;flex:none}
+.bar{height:8px;border-radius:9px;background:#26322d;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}
+nav{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:flex;background:#1b1815ee;border:1px solid var(--line);border-radius:30px;padding:6px;max-width:520px;margin:auto;backdrop-filter:blur(12px)}
+nav button{flex:1;background:none;border:0;color:var(--mut);font:14px Lora,serif;padding:10px 0;border-radius:24px}nav button.on{background:#3a3631;color:var(--tx)}
+#sheet,#timer{position:fixed;inset:0;display:none;z-index:9}#sheet.on{display:flex;align-items:flex-end;background:#000a}
+#sheet>div{background:#1b1815;width:100%;max-width:520px;margin:auto auto 0;border-radius:26px 26px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto}
+#timer.on{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#17120f;gap:16px;text-align:center}
+#tt{font-size:76px;color:#9fcdb8;font-weight:600}
+input,select,textarea{width:100%;background:#26221e;border:1px solid var(--line);color:var(--tx);border-radius:14px;padding:12px;font:17px Lora,serif;margin:6px 0}
+label{color:var(--mut);font-size:14px}
+.wk{display:flex;justify-content:space-between;align-items:flex-end;height:70px;margin:10px 0 4px}.wk div{text-align:center;flex:1;font-size:13px;color:var(--mut)}.wk i{display:block;width:12px;margin:0 auto 4px;border-radius:8px;background:var(--ac);min-height:6px;opacity:.9}
+.shelf{display:flex;gap:12px;align-items:flex-end;padding:14px 14px 0;background:linear-gradient(#2a1a20,#1e1217);border-radius:14px 14px 0 0;min-height:150px}
+.plank{height:14px;background:linear-gradient(#7b6a58,#4d4136);border-radius:0 0 8px 8px;margin-bottom:22px;box-shadow:0 8px 14px #0008}
+.li{display:flex;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.st{font-size:30px;color:#3a463f;letter-spacing:4px}.st b{color:var(--ac2);font-weight:400}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips button{background:none;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font:15px Lora,serif}.chips .on{color:var(--tx);border-color:var(--ac)}
+</style></head><body>
+<div class="w" id="app"></div><nav id="nav"></nav><div id="sheet" onclick="if(event.target==this)cl()"><div id="sb"></div></div>
+<div id="timer"><div id="tn" style="font-size:22px;font-weight:600"></div><div id="tt">0:00</div><div class="m">Take your time. The book has you now.</div><button class="btn" id="tp" onclick="pz()">Pause</button><button class="btn g" onclick="stp()">Stop here</button><button class="btn r" onclick="cx()">Discard</button></div>
+<script>
+let S;try{S=JSON.parse(localStorage.getItem('sc')||'null')}catch(e){}
+S=S||{books:[],ses:[],tab:'r',cur:null,timer:null,f:'all'};
+const sv=()=>{try{localStorage.setItem('sc',JSON.stringify(S))}catch(e){}};
+const H=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=s=>document.querySelector(s),B=id=>S.books.find(b=>b.id==id);
+const day=t=>{const d=new Date(t);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
+const cov=(b,w)=>b.cover?`<img class="cv" src="${b.cover}" style="width:${w}px">`:`<div class="cv" style="width:${w}px;background:linear-gradient(145deg,hsl(${hue(b.title)} 35% 34%),hsl(${hue(b.title)} 40% 15%))"><span>${H(b.title)}</span></div>`;
+const mins=d=>S.ses.filter(s=>day(s.start)==d).reduce((a,s)=>a+s.min,0);
+const fm=m=>m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min';
+const streak=()=>{let n=0,d=new Date();if(!mins(day(d)))d.setDate(d.getDate()-1);while(mins(day(d))){n++;d.setDate(d.getDate()-1)}return n};
+const pct=b=>b.pages?Math.min(100,Math.round(b.page/b.pages*100)):0;
+const left=b=>{const ss=S.ses.filter(s=>s.bookId==b.id),m=ss.reduce((a,s)=>a+s.min,0),p=ss.reduce((a,s)=>a+s.pages,0);return m&&p&&b.pages?'≈ '+fm(Math.round((b.pages-b.page)/(p/m)))+' left':(b.pages-b.page)+' pages left'};
+const ST={reading:'Currently reading',tbr:'To read',read:'Read'};
+const op=h=>{$('#sb').innerHTML=h;$('#sheet').classList.add('on')},cl=()=>$('#sheet').classList.remove('on');
+const go=t=>{S.tab=t;sv();R()};
+const cur=()=>B(S.cur)&&B(S.cur).status=='reading'?B(S.cur):S.books.find(b=>b.status=='reading');
+
+function R(){
+ $('#nav').innerHTML=[['r','Reading'],['s','Bookshelf'],['b','My Books'],['j','Journal']].map(([k,n])=>`<button class="${S.tab==k?'on':''}" onclick="go('${k}')">${n}</button>`).join('');
+ $('#app').innerHTML=({r:vR,s:vS,b:vB,j:vJ})[S.tab]();scrollTo(0,0)}
+
+function vR(){
+ const b=cur(),h=new Date().getHours(),g=h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening',t=mins(day(Date.now()));
+ let o=`<h1>${g}</h1><div class="m">${t?fm(t)+' read today. Nice.':'Nothing read yet today.'}</div>`;
+ if(!b)o+=`<div class="card c"><p>You’re not reading anything right now.</p><button class="btn" onclick="addB()">Add a book</button></div>`;
+ else o+=`<div class="c" style="margin:24px 0 8px;display:flex;justify-content:center" onclick="det(${b.id})">${cov(b,190)}</div>
+ <div class="c"><h2 style="margin:10px 0 0">${H(b.title)}</h2><div class="m">${H(b.author)}</div></div>
+ <div class="bar" style="margin:16px 0 6px"><i style="width:${pct(b)}%"></i></div><div class="c m">pg ${b.page} / ${b.pages||'?'} · ${pct(b)}% · ${left(b)}</div>
+ <div class="row" style="justify-content:center;margin-top:14px"><button class="btn" onclick="tst(${b.id})">▶ Start</button><button class="btn g" onclick="upd(${b.id})">Update</button></div>
+ <div class="c" style="margin-top:10px"><button class="btn g" onclick="man(${b.id})">+ Add a sitting</button></div>`;
+ const w=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return[mins(day(d)),'SMTWTFS'[d.getDay()]]}),mx=Math.max(30,...w.map(x=>x[0]));
+ o+=`<div class="card"><div class="m">This week</div><div class="wk">${w.map(([m,l])=>`<div><i style="height:${m?8+m/mx*50:6}px;${m?'':'opacity:.2'}"></i>${l}</div>`).join('')}</div>
+ <div>${streak()}-day streak · ${fm(S.ses.reduce((a,s)=>a+s.min,0))} in all · ${S.ses.reduce((a,s)=>a+s.pages,0)} pages</div></div>`;
+ return o}
+
+function vS(){
+ const bs=S.books.filter(b=>b.status!='tbr');let o=`<h1>Bookshelf</h1><div class="m">${bs.length} books</div><div style="margin-top:18px">`;
+ if(!bs.length)o+=`<div class="card c m">The shelf is empty. Add your first book in “My Books”.</div>`;
+ for(let i=0;i<bs.length;i+=3)o+=`<div class="shelf">${bs.slice(i,i+3).map(b=>`<div onclick="det(${b.id})">${cov(b,92)}</div>`).join('')}</div><div class="plank"></div>`;
+ return o+'</div>'}
+
+function vB(){
+ const n=k=>S.books.filter(b=>b.status==k).length,L=S.books.filter(b=>S.f=='all'||b.status==S.f);
+ return `<div class="row sp"><h1>My Books</h1><button class="btn" onclick="addB()">+</button></div>
+ <div class="chips" style="margin:10px 0">${[['all','All '+S.books.length],['reading','Reading '+n('reading')],['tbr','To read '+n('tbr')],['read','Read '+n('read')]].map(([k,t])=>`<button class="${S.f==k?'on':''}" onclick="S.f='${k}';R()">${t}</button>`).join('')}</div>
+ ${L.length?L.map(b=>`<div class="li" onclick="det(${b.id})">${cov(b,56)}<div style="flex:1"><div style="font-weight:600">${H(b.title)}</div><div class="m">${H(b.author)}${b.series?' · '+H(b.series):''}</div>${b.status=='reading'?`<div class="bar" style="margin-top:6px"><i style="width:${pct(b)}%"></i></div>`:`<div class="m" style="font-size:14px">${ST[b.status]}</div>`}</div></div>`).join(''):'<div class="card c m">Nothing here yet.</div>'}`}
+
+function vJ(){
+ const d=new Date(),mo=S.ses.filter(s=>new Date(s.start).getMonth()==d.getMonth()&&new Date(s.start).getFullYear()==d.getFullYear()),mm=mo.reduce((a,s)=>a+s.min,0),pp=mo.reduce((a,s)=>a+s.pages,0),dn=S.books.filter(b=>b.status=='read').length,ln=[...S.ses].sort((a,b)=>b.start-a.start).slice(0,40);
+ return `<h1>Your journal</h1><div class="card" style="background:linear-gradient(150deg,#4f8a73,#2f4f43)"><h2 style="margin:0 0 10px">${d.toLocaleDateString('en-US',{month:'long'})}, wrapped</h2><div class="row sp c"><div><b style="font-size:28px">${dn}</b><br>books</div><div><b style="font-size:28px">${(mm/60).toFixed(1)}</b><br>hours</div><div><b style="font-size:28px">${pp}</b><br>pages</div><div><b style="font-size:28px">${new Set(mo.map(s=>day(s.start))).size}</b><br>evenings</div></div></div>
+ <h2>Sittings</h2>${ln.length?ln.map(s=>{const b=B(s.bookId);return`<div class="li"><div style="flex:1"><div>${b?H(b.title):'Deleted book'}</div><div class="m" style="font-size:14px">${new Date(s.start).toLocaleDateString('en-US',{day:'numeric',month:'short'})}${s.note?' · '+H(s.note):''}</div></div><div class="m">${s.min} min · ${s.pages} pg</div><button class="btn r" style="padding:4px 10px" onclick="dls(${s.id})">×</button></div>`}).join(''):'<div class="m">No sittings yet. Press Start on your first book.</div>'}<h2>Backup</h2><div class="row"><button class="btn g" onclick="ex()">Export</button><label class="btn g" style="margin:0">Import<input type="file" accept=".json" style="display:none" onchange="im(this)"></label></div>`}
+
+function addB(){CV='';op(`<h2 style="margin-top:0">New book</h2><div class="row"><input id="q" placeholder="Search by title or author" onkeydown="if(event.key=='Enter')srch()"><button class="btn" onclick="srch()">Search</button></div><div id="sr"></div><label>Title</label><input id="a1"><label>Author</label><input id="a2"><label>Number of pages</label><input id="a3" type="number" inputmode="numeric"><label>Series (optional)</label><input id="a4" placeholder="ex. The Empyrean"><label>Status</label><select id="a5"><option value="reading">Currently reading</option><option value="tbr">To read</option><option value="read">Read</option></select><label>Cover (photo, optional)</label><input id="a6" type="file" accept="image/*"><div class="row sp" style="margin-top:12px"><button class="btn g" onclick="cl()">Cancel</button><button class="btn" onclick="saveB()">Save</button></div>`)}
+let CV='',RS=[];
+async function srch(){const q=$('#q').value.trim();if(!q)return;$('#sr').innerHTML='<div class="m">Searching…</div>';
+ try{const r=await fetch('https://openlibrary.org/search.json?limit=8&fields=title,author_name,number_of_pages_median,cover_i&q='+encodeURIComponent(q));if(!r.ok)throw 0;RS=(await r.json()).docs||[];
+ $('#sr').innerHTML=RS.length?RS.map((d,i)=>`<div class="li" onclick="pick(${i})">${d.cover_i?`<img class="cv" src="https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg" style="width:44px">`:'<div class="cv" style="width:44px;background:#333"></div>'}<div><div>${H(d.title)}</div><div class="m" style="font-size:14px">${H((d.author_name||[])[0]||'')}${d.number_of_pages_median?' · '+d.number_of_pages_median+' pg':''}</div></div></div>`).join(''):'<div class="m">No results.</div>'}
+ catch(e){$('#sr').innerHTML='<div class="m">Search isn’t available here. Enter the book manually below.</div>'}}
+function pick(i){const d=RS[i];$('#a1').value=d.title;$('#a2').value=(d.author_name||[])[0]||'';$('#a3').value=d.number_of_pages_median||'';CV=d.cover_i?'https://covers.openlibrary.org/b/id/'+d.cover_i+'-M.jpg':'';$('#sr').innerHTML='<div class="m">Filled in below. Check it and save.</div>'}
+function ex(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='everbound-backup.json';a.click()}
+function im(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.books)||!Array.isArray(d.ses))throw 0;if(confirm('Replace your current data with this backup?')){S=d;S.timer=null;sv();R()}}catch(e){alert('That file isn’t a valid backup.')}};r.readAsText(f)}
+function saveB(){const t=$('#a1').value.trim();if(!t){$('#a1').focus();return}
+ const mk=c=>{const st=$('#a5').value,b={id:Date.now(),title:t,author:$('#a2').value.trim(),pages:+$('#a3').value||0,page:0,series:$('#a4').value.trim(),status:st,cover:c||CV,rating:0,notes:''};if(st=='read')b.page=b.pages;S.books.push(b);if(st=='reading'&&!S.cur)S.cur=b.id;sv();cl();R()},f=$('#a6').files[0];
+ if(!f)return mk('');const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),k=300/im.width;c.width=300;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);mk(c.toDataURL('image/jpeg',.8))};im.src=r.result};r.readAsDataURL(f)}
+
+function det(id){const b=B(id),ss=S.ses.filter(s=>s.bookId==id).sort((a,b)=>b.start-a.start);
+ op(`<div class="row" style="align-items:flex-start">${cov(b,100)}<div style="flex:1"><h2 style="margin:0">${H(b.title)}</h2><div class="m">${H(b.author)}</div>${b.series?`<div class="m" style="font-size:14px">${H(b.series)}</div>`:''}<div style="margin-top:8px">pg ${b.page} / ${b.pages||'?'} · ${pct(b)}%</div></div></div>
+ <div class="bar" style="margin:12px 0"><i style="width:${pct(b)}%"></i></div>
+ <div class="row" style="flex-wrap:wrap"><button class="btn" onclick="cl();tst(${id})">▶ Start</button><button class="btn g" onclick="upd(${id})">Update</button></div>
+ <label>Status</label><select onchange="B(${id}).status=this.value;if(this.value=='reading')S.cur=${id};if(this.value=='read')B(${id}).page=B(${id}).pages;sv();R()">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${b.status==k?'selected':''}>${v}</option>`).join('')}</select>
+ <label>Rating</label><div class="st">${[1,2,3,4,5].map(i=>i<=b.rating?`<b onclick="rt(${id},${i})">★</b>`:`<span onclick="rt(${id},${i})">★</span>`).join('')}</div>
+ <label>Thoughts and quotes</label><textarea rows="4" onchange="B(${id}).notes=this.value;sv()">${H(b.notes)}</textarea>
+ <h2>Sittings (${ss.length})</h2>${ss.map(s=>`<div class="m">${new Date(s.start).toLocaleDateString('en-US')} · ${s.min} min · ${s.pages} pg</div>`).join('')||'<div class="m">Nothing yet.</div>'}
+ <div class="row sp" style="margin-top:18px"><button class="btn r" onclick="if(confirm('Delete this book?')){S.books=S.books.filter(x=>x.id!=${id});S.ses=S.ses.filter(x=>x.bookId!=${id});sv();cl();R()}">Delete</button><button class="btn g" onclick="cl();R()">Done</button></div>`)}
+function rt(id,n){B(id).rating=B(id).rating==n?0:n;sv();det(id)}
+function dls(id){if(confirm('Delete this sitting?')){S.ses=S.ses.filter(s=>s.id!=id);sv();R()}}
+
+function upd(id){const b=B(id);op(`<h2 style="margin-top:0">Where are you?</h2><label>Current page</label><input id="u1" type="number" inputmode="numeric" value="${b.page}"><label>Total pages</label><input id="u2" type="number" inputmode="numeric" value="${b.pages}"><div class="row sp" style="margin-top:12px"><button class="btn g" onclick="cl()">Cancel</button><button class="btn" onclick="B(${id}).page=+$('#u1').value||0;B(${id}).pages=+$('#u2').value||0;if(B(${id}).pages&&B(${id}).page>=B(${id}).pages)B(${id}).status='read';sv();cl();R()">Save</button></div>`)}
+function man(id){const b=B(id);op(`<h2 style="margin-top:0">Add a sitting</h2><label>Minutes read</label><input id="m1" type="number" inputmode="numeric"><label>Page you reached</label><input id="m2" type="number" inputmode="numeric" value="${b.page}"><label>Day</label><input id="m3" type="date" value="${new Date().toISOString().slice(0,10)}"><div class="row sp" style="margin-top:12px"><button class="btn g" onclick="cl()">Cancel</button><button class="btn" onclick="addS(${id},+$('#m1').value,+$('#m2').value,new Date($('#m3').value+'T20:00').getTime())">Save</button></div>`)}
+function addS(id,m,np,t){const b=B(id);if(m<1)return;S.ses.push({id:Date.now(),bookId:id,start:t||Date.now(),min:m,pages:Math.max(0,np-b.page)});b.page=Math.max(b.page,np);if(b.pages&&b.page>=b.pages)b.status='read';sv();cl();R()}
+
+let iv;const el=()=>S.timer.acc+(S.timer.t0?Date.now()-S.timer.t0:0);
+function tst(id){S.timer={id,acc:0,t0:Date.now()};sv();tsh()}
+function tsh(){if(!S.timer)return;$('#tn').textContent=B(S.timer.id).title;$('#timer').classList.add('on');clearInterval(iv);iv=setInterval(tk,500);tk()}
+function tk(){const s=Math.floor(el()/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60);$('#tt').textContent=(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s%60).padStart(2,'0');$('#tp').textContent=S.timer.t0?'Pause':'Resume'}
+function pz(){if(S.timer.t0){S.timer.acc+=Date.now()-S.timer.t0;S.timer.t0=null}else S.timer.t0=Date.now();sv();tk()}
+function cx(){if(confirm('Discard this sitting?')){S.timer=null;sv();clearInterval(iv);$('#timer').classList.remove('on')}}
+function stp(){const b=B(S.timer.id),m=Math.max(1,Math.round(el()/60000));if(S.timer.t0){S.timer.acc+=Date.now()-S.timer.t0;S.timer.t0=null}clearInterval(iv);$('#timer').classList.remove('on');
+ op(`<h2 style="margin-top:0">You read ${m} min. Where did you stop?</h2><label>Current page</label><input id="e1" type="number" inputmode="numeric" value="${b.page}"><div class="row sp" style="margin-top:12px"><button class="btn g" onclick="addS(${b.id},${m},B(${b.id}).page,Date.now()-${m*60000});S.timer=null;sv()">Skip pages</button><button class="btn" onclick="addS(${b.id},${m},+$('#e1').value,Date.now()-${m*60000});S.timer=null;sv()">Save</button></div>`)}
+R();tsh();
+</script></body></html>
